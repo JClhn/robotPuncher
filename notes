@@ -1,0 +1,146 @@
+fix object removal from render list!!!!!!!!!!!!!! done, but needs to be better
+
+----write function to deal with image smoothing on all browsers
+----write sprite switching routine for objects -- done
+----write room map loading and rendering -- done but needs improvement
+----write collision detection
+----solve problems with your fists
+----use css to place and scale the canvas depending on browser window size
+----move all variables out of global namespace
+
+image->sprite->gameObject->room->game
+
+image->background->room->game
+
+image->map->room->game
+
+image is the bitmap resource itself
+
+access hyphenated css properties like this: what-ever: ass becomes whatEver = 'ass' 
+
+there's no good reason that code should not be written in such a way that 
+it's function is dead obvious.
+
+it's silly to incorporate a whole framework to save yourself from writting
+three lines of code.
+game object functions
+center()
+topLeft()
+bottomRight()
+
+moveOut(collisionData)
+applyMovement(xSpeed,ySpeed)
+applyFriction(amount)
+accelerate(direction,force)
+
+setVisibility("yes" or "no")
+setSprite(sprite,xOffset,yOffset)
+
+
+gameObject.center = function() {
+    var xCenter = this.x + this.collideBox.xOffset + (this.collideBox.width *.5);
+    var yCenter = this.y + this.collideBox.yOffset + (this.collideBox.height *.5);
+    return { 
+            x: xCenter,
+            y: yCenter
+    };
+};
+gameObject.topLeft = function() {
+    var xLeft = this.x + this.collideBox.xOffset;
+    var yTop = this.y + this.collideBox.yOffset;
+    return {
+        x: xLeft,
+        y: yTop
+    };
+};
+gameObject.bottomRight = function() {
+    var xRight = this.x + this.collideBox.xOffset + this.collideBox.width;
+    var yBottom = this.y + this.collideBox.yOffset + this.collideBox.height;
+    return {
+        x: xRight,
+        y: yBottom
+    };
+};
+if (gameObject.componentList.movement) {
+    gameObject.moveOut = function(collisionData) {
+         if (Math.abs(collisionData.x) < Math.abs(collisionData.y)) { //horizontal collision
+             this.x -= collisionData.x;
+             if (collisionData.x <= 0) {
+                this.x += 1;
+             };
+         } else {
+             this.y -= collisionData.y;
+             if (collisionData.y <= 0) {
+                 this.y += 1;
+             };
+         };
+    };
+    gameObject.applyMovement = function(xSpeed,ySpeed) {
+        this.y += this.ySpeed*game.delta;
+        this.x += this.xSpeed*game.delta;
+    };
+    gameObject.applyFriction = function(amount) {
+        if (this.ySpeed > 0) {
+            this.ySpeed -= amount;
+            if (this.ySpeed < 0) {
+                this.ySpeed = 0;
+            };
+        };
+        if (this.ySpeed < 0) {
+            this.ySpeed += amount;
+            if (this.ySpeed > 0) {
+                this.ySpeed = 0;
+            };
+        };
+        if (this.xSpeed > 0) {
+            this.xSpeed -= amount;
+            if (this.xSpeed < 0) {
+                this.xSpeed = 0;
+            };
+        };
+        if (this.xSpeed < 0) {
+            this.xSpeed += amount;
+            if (this.xSpeed > 0) {
+                this.xSpeed = 0;
+            };
+        };
+    }
+    gameObject.accelerate = function(direction,force){
+        if (direction === "up") {
+            if (-this.ySpeed < this.maxSpeed) {
+                this.ySpeed -= force;
+            }
+        }
+        if (direction === "down") {
+            if (this.ySpeed < this.maxSpeed) {
+                this.ySpeed += force;
+            }
+        }
+        if (direction === "left") {
+            if (-this.xSpeed < this.maxSpeed) {
+                this.xSpeed -= force;
+            }
+        }
+        if (direction === "right") {
+            if (this.xSpeed < this.maxSpeed) {
+                this.ySpeed += force;
+            }
+        }
+
+    }
+};
+gameObject.setVisible = function(visibility) {
+    if (visibility === "no") {
+        this.visible = "no";
+    };
+    if (visibility === "yes") {
+        this.visible = "yes";
+        game.renderable.push(this);
+    };
+};
+gameObject.setSprite = function(spriteName,xOffset,yOffset) {
+    if (this.sprite.tag != spriteName) {
+        this.sprite = sprites.make(spriteName,xOffset,yOffset);
+    };
+};
+
